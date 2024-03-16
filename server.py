@@ -17,7 +17,7 @@ def establish_connection():
     print(f"Server is running on {HOST}:{PORT}")
 
 
-def remove_client(client, username):
+def remove_client(username):
     user_to_remove = None
     for user in clients:
         if user['username'] == username:
@@ -49,19 +49,19 @@ def get_client_by_username(username):
 
 
 def display_active_users(client):
-    users_msg = f"\nUsers online: \n-------------------------------------------------------------------------------------\n{users}\n"
-    all_users_msg = {'chat': users_msg}
-    # send_single_client_json(client, all_users_msg)
+    users_msg = f"\n** Users Online: **\n-------------------------------------------------------------------------------------\n{users}\n"
+    users_msg += "-------------------------------------------------------------------------------------\n"
+    send_single_client_msg(client, users_msg)
 
 
 def register_user(username, password):
-    with open('users.csv', 'r') as user_file:
+    with open('users.csv', 'r', newline='', encoding='utf-8') as user_file:
         users_csv = csv.reader(user_file) 
         for user in users_csv:
             if user[0].lower() == username.lower():
                 return False # username already taken
     # username not taken, so append it to the users file
-    with open('users.csv', 'a') as user_file:
+    with open('users.csv', 'a', newline='', encoding='utf-8') as user_file:
         csv_writer = csv.writer(user_file)  
         csv_writer.writerow([username, password])
         print(f"new user registered: '{username}'!")
@@ -93,7 +93,7 @@ def receive_new_client():
                 password = response[1]
                 if verify_login(username, password):
                     login_verified = True
-                    send_single_client_msg(client, "login_success")
+                    send_single_client_msg(client, 'login_success')
                     users.append(username)
                     clients.append({'username': username, 'client_socket': client})
                     print(f"New client online! Username: '{username}'!")
@@ -113,18 +113,6 @@ def receive_new_client():
                 else:
                     send_single_client_msg(client, "registration_fail")
 
-            # if (verify_username(client_msg['username'])):
-            #     login_verified = True
-            #     users.append(client_msg['username'])
-            #     # send_single_client_json(client, {'success': ""})
-            #     clients.append({'username': client_msg['username'], 'client_socket': client})
-            #     print(f"New client connected! Username: {client_msg['username']}!")
-            #     # start a thread to handle the client interactions
-            #     threading.Thread(target=handle_client, args=(client,)).start()
-            #     send_chat_all(f"* '{client_msg['username']}' joined the server! *")
-            # else:
-            #     send_single_client_json(client, {'fail': ""})
-
 
 
 def verify_username(username):
@@ -141,11 +129,22 @@ def handle_client(client):
     while True:
         try:
             message = client.recv(4096).decode('utf-8')
-            broadcast(message)
+
+            if message.lower() == 'list':
+                display_active_users(client)
+            elif message.lower() == 'logout':
+                username = get_username_by_client(client)
+                send_single_client_msg(client, "logout_success")
+                remove_client(username)
+                broadcast(f"* '{username}' left the chat! *")
+                print(f"* '{username}' logged out! *")
+                break
+            else:
+                broadcast(message)
 
         except: # exception or disconnect, remove the client and close connection.
             username = get_username_by_client(client)
-            remove_client(client, username)
+            remove_client(username)
             broadcast(f"* '{username}' disconnected! *")
             break
 
@@ -156,7 +155,6 @@ def main():
     establish_connection()
     receive_new_client()
     
-
 
 if __name__ == "__main__":
     main()

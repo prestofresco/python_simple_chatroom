@@ -1,6 +1,7 @@
 import socket
 import sys
 import threading
+import os
 
 HOST = '127.0.0.1'
 PORT = 7200
@@ -8,16 +9,19 @@ PORT = 7200
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 user = None
 help_menu = "\n--------------------------------- HELP MENU ----------------------------------------\n"
-help_menu += "Type a message to chat with other players.\n"
-help_menu += "If you would like to start a game with another player type: 'play' in chat.\n"
-help_menu += "To display the help menu type: 'help' in chat.\n"
-help_menu += "To display active users type: 'users' in chat.\n"
+help_menu += "Type a message to chat with other users.\n"
+help_menu += "'help' To display the help menu in chat.\n"
+help_menu += "'list' To display all online users in chat.\n"
+help_menu += "'privmsg' <username> <message>' To send a direct message to another user.\n"
 help_menu += "------------------------------------------------------------------------------------\n"
 
 login_help_menu = "\n--------------------------------- LOGIN HELP ----------------------------------------\n"
 login_help_menu += "Type 'registration' to register a new account.\n"
 login_help_menu += "Type 'login' to login to your account.\n"
 login_help_menu += "--------------------------------------------------------------------------------------\n"
+# declare the threads globally for access in methods
+write_thread = None
+receive_thread = None
 
 
 def establish_connection():
@@ -26,7 +30,7 @@ def establish_connection():
 
     while not login_success:
         print(login_help_menu)
-        message = input("")
+        message = input("Enter option: ")
 
         if message.lower() == 'login':
             send_server_msg("login")
@@ -66,7 +70,13 @@ def receive():
     while True:
         try:
             message = client_socket.recv(4096).decode('utf-8')
-            print(message)
+            if message.lower() == 'logout_success':
+                print("in logout success")
+                print("\n**You have successfully been logged out and disconnected. goodbye!!\n")
+                client_socket.close()
+                os._exit(1)
+            else:
+                print(message) # just a chat message
 
         except Exception as error:
             print("An error occurred!", error)
@@ -78,10 +88,15 @@ def write():
     while True:
         message = input("") # get chat message input
 
-        if message.lower() == 'register':
-            print('got register')
-        elif message.lower() == 'login':
-            print('got login')
+        if message.lower() == 'help':
+            print(help_menu)
+        elif message.lower() == 'list':
+            send_server_msg('list')
+        elif message.lower() == 'logout':
+            send_server_msg('logout')
+            
+            
+            
 
         else: # just a chat message
             send_server_msg(f"{user}: {message}")
