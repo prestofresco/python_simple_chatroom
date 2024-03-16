@@ -6,7 +6,7 @@ HOST = '127.0.0.1'
 PORT = 7200
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-username = None
+user = None
 help_menu = "\n--------------------------------- HELP MENU ----------------------------------------\n"
 help_menu += "Type a message to chat with other players.\n"
 help_menu += "If you would like to start a game with another player type: 'play' in chat.\n"
@@ -36,7 +36,9 @@ def establish_connection():
             response = client_socket.recv(4096).decode('utf-8')
             if response == 'login_success':
                 login_success = True
-                print("** Login success! Welcome to the chatroom!\n")
+                global user
+                user = username
+                print(f"** Login success! Welcome to the chatroom {user}!\n")
             else: 
                 print("\n** Login fail. Username or password was incorrect. Type 'login' to try again.")
         
@@ -82,8 +84,7 @@ def write():
             print('got login')
 
         else: # just a chat message
-            print('got chat')
-            send_server_msg(message)
+            send_server_msg(f"{user}: {message}")
 
 
 # ------------------ MAIN --------------------

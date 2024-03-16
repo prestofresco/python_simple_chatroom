@@ -27,11 +27,9 @@ def remove_client(client, username):
     users.remove(username)
 
 
-def send_chat_all(message):
+def broadcast(message):
     for client in clients:
-        chat_msg = {'chat': message}
-        # chat_msg = json.dumps(chat_msg) # serialized json
-        client['client_socket'].sendall(chat_msg.encode('utf-8'))
+        send_single_client_msg(client['client_socket'], message)
 
 
 def send_single_client_msg(client, message):
@@ -94,7 +92,14 @@ def receive_new_client():
                 username = response[0]
                 password = response[1]
                 if verify_login(username, password):
+                    login_verified = True
                     send_single_client_msg(client, "login_success")
+                    users.append(username)
+                    clients.append({'username': username, 'client_socket': client})
+                    print(f"New client online! Username: '{username}'!")
+                    # start a thread to handle the client's chatroom interactions
+                    threading.Thread(target=handle_client, args=(client,)).start()
+                    broadcast(f"* '{username}' joined the server! *")
                 else:
                     send_single_client_msg(client, "login_fail")
 
@@ -123,8 +128,6 @@ def receive_new_client():
 
 
 def verify_username(username):
-    
-    
     if not users: 
         return True
     else:
@@ -138,16 +141,12 @@ def handle_client(client):
     while True:
         try:
             message = client.recv(4096).decode('utf-8')
-            message = message.decode('utf-8')
-            print(message)
-            # print("handling: ", get_username_by_client(client), message) # debug
-
-                
+            broadcast(message)
 
         except: # exception or disconnect, remove the client and close connection.
             username = get_username_by_client(client)
             remove_client(client, username)
-            send_chat_all(f"* '{username}' disconnected! *")
+            broadcast(f"* '{username}' disconnected! *")
             break
 
 
