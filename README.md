@@ -18,4 +18,3 @@ Type a message in chat to send a message to all other active users.
 'list' - displays the usernames of all online users.
 'logout' - logs the user out of the chatroom and exits the application.
 'privmsg' <username> <message>' - attempts to send a private message to the specified user. The sender is notified if the user is not online or doesn't exist.
-
