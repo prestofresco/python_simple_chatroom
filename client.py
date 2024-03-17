@@ -12,6 +12,7 @@ help_menu = "\n--------------------------------- HELP MENU ---------------------
 help_menu += "Type a message to chat with other users.\n"
 help_menu += "'help' To display the help menu in chat.\n"
 help_menu += "'list' To display all online users in chat.\n"
+help_menu += "'logout' To logout and exit the chat room.\n"
 help_menu += "'privmsg' <username> <message>' To send a direct message to another user.\n"
 help_menu += "------------------------------------------------------------------------------------\n"
 
@@ -42,7 +43,8 @@ def establish_connection():
                 login_success = True
                 global user
                 user = username
-                print(f"** Login success! Welcome to the chatroom {user}!\n")
+                print(f"** Login success! Welcome to the chatroom {user}!")
+                print(help_menu)
             else: 
                 print("\n** Login fail. Username or password was incorrect. Type 'login' to try again.")
         
@@ -70,9 +72,10 @@ def receive():
     while True:
         try:
             message = client_socket.recv(4096).decode('utf-8')
+
             if message.lower() == 'logout_success':
                 print("in logout success")
-                print("\n**You have successfully been logged out and disconnected. goodbye!!\n")
+                print("\n** You have successfully been logged out and disconnected. goodbye!!\n")
                 client_socket.close()
                 os._exit(1)
             else:
@@ -86,20 +89,27 @@ def receive():
 
 def write():
     while True:
-        message = input("") # get chat message input
+        try: 
+            message = input("") # get chat message input
+            parsed_msg = message.split()
 
-        if message.lower() == 'help':
-            print(help_menu)
-        elif message.lower() == 'list':
-            send_server_msg('list')
-        elif message.lower() == 'logout':
-            send_server_msg('logout')
-            
-            
-            
+            if parsed_msg[0].lower() == 'help':
+                print(help_menu)
+            elif parsed_msg[0].lower() == 'list':
+                send_server_msg('list')
+            elif parsed_msg[0].lower() == 'logout':
+                send_server_msg('logout')
+            elif parsed_msg[0].lower() == 'privmsg':
+                if len(parsed_msg) < 3: # check if we have the correct argument structure
+                    print("\nIncorrect usage of 'privmsg'\nUsage: 'privmsg' <username> <message>'\n")
+                else: # correct number of args
+                    send_server_msg(message)
 
-        else: # just a chat message
-            send_server_msg(f"{user}: {message}")
+            else: # just a chat message
+                send_server_msg(f"{user}: {message}")
+
+        except Exception as error:
+            print("Sorry, an error occurred! :( please try again or type 'help' for the help menu.")
 
 
 # ------------------ MAIN --------------------
