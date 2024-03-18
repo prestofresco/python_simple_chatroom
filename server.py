@@ -8,7 +8,7 @@ PORT = 7200
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-clients = [] # list of dictionaries of each connected client {'username': name, 'client_socket': socket} , {} , ...
+clients_online = [] # list of dictionaries of each connected client {'username': name, 'client_socket': socket} , {} , ...
 users = [] # list of connected usernames
 
 def establish_connection():
@@ -19,16 +19,16 @@ def establish_connection():
 # remove a client from the online users lists
 def remove_client(username):
     user_to_remove = None
-    for user in clients:
+    for user in clients_online:
         if user['username'] == username:
             user_to_remove = user
 
-    clients.remove(user_to_remove)
+    clients_online.remove(user_to_remove)
     users.remove(username)
 
 # broadcast a message to all online clients.
 def broadcast(message):
-    for client in clients:
+    for client in clients_online:
         send_single_client_msg(client['client_socket'], message)
 
 # send a single client a message
@@ -38,7 +38,7 @@ def send_single_client_msg(client, message):
 # attempt to send a private message to a certain username.
 # returns boolean success indication.
 def send_private_msg(username, message):
-    for client in clients:
+    for client in clients_online:
         if client['username'].lower() == username.lower():
             send_single_client_msg(client['client_socket'], message)
             return True
@@ -46,13 +46,13 @@ def send_private_msg(username, message):
 
 # find the username of a client using their client socket.
 def get_username_by_client(client):
-    for user in clients:
+    for user in clients_online:
         if user['client_socket'] == client:
             return user['username']
         
 # find a client's socket by their username
 def get_client_by_username(username):
-    for user in clients:
+    for user in clients_online:
         if user['username'] == username:
             return user['client_socket']
 
@@ -105,7 +105,7 @@ def receive_new_client():
                         login_verified = True
                         send_single_client_msg(client, 'login_success')
                         users.append(username)
-                        clients.append({'username': username, 'client_socket': client})
+                        clients_online.append({'username': username, 'client_socket': client})
                         print(f"New client online! Username: '{username}'!")
                         # start a thread to handle the client's chatroom interactions
                         threading.Thread(target=handle_client, args=(client,)).start()

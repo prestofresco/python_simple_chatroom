@@ -60,7 +60,7 @@ def establish_connection():
                 print(f"\n** Registration failed. Username: {username} was already taken.")
         
         else:
-            print("Command not recognized. Please try again.")
+            print("** Command not recognized. Please try again.")
 
 
 
@@ -101,7 +101,7 @@ def write():
                 send_server_msg('logout')
             elif parsed_msg[0].lower() == 'privmsg':
                 if len(parsed_msg) < 3: # check if we have the correct argument structure
-                    print("\nIncorrect usage of 'privmsg'\nUsage: 'privmsg' <username> <message>'\n")
+                    print("\n** Incorrect usage of 'privmsg'\nUsage: 'privmsg' <username> <message>'\n")
                 else: # correct number of args
                     send_server_msg(message)
 
