@@ -1,5 +1,4 @@
 import socket
-import sys
 import threading
 import os
 
@@ -22,7 +21,8 @@ login_help_menu += "Type 'registration' to register a new account.\n"
 login_help_menu += "Type 'login' to login to your account.\n"
 login_help_menu += "--------------------------------------------------------------------------------------\n"
 
-
+# initial method to establish connection with the server
+# handles user login and registration logic
 def establish_connection():
     login_success = False
     client_socket.connect((HOST, PORT))
@@ -61,18 +61,17 @@ def establish_connection():
             print("** Command not recognized. Please try again.")
 
 
-
+# send a message to the server
 def send_server_msg(msg):
     client_socket.sendall(msg.encode('utf-8'))
 
-
+# receive method handled by a thread. handles receiving messages from the server.
 def receive():
     while True:
         try:
             message = client_socket.recv(4096).decode('utf-8')
 
             if message.lower() == 'logout_success':
-                print("in logout success")
                 print("\n** You have successfully been logged out and disconnected. goodbye!!\n")
                 client_socket.close()
                 os._exit(1)
@@ -84,7 +83,7 @@ def receive():
             client_socket.close()
             break
 
-
+# write method handled by a thread. will accept and handle user messages.
 def write():
     while True:
         try: 
@@ -116,7 +115,6 @@ def write():
 # ------------------ MAIN --------------------
 def main():
     establish_connection()
-    global write_thread, receive_thread
     threading.Thread(target=receive).start() # start the receive thread
     threading.Thread(target=write).start() # start the write thread
 

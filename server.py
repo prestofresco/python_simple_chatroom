@@ -1,5 +1,4 @@
 import socket
-import sys
 import threading
 import csv
 
@@ -11,6 +10,7 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 clients_online = [] # list of dictionaries of each connected client {'username': name, 'client_socket': socket} , {} , ...
 users = [] # list of connected usernames
 
+# initial connection establishment
 def establish_connection():
     server_socket.bind((HOST, PORT))
     server_socket.listen()
@@ -57,13 +57,14 @@ def get_client_by_username(username):
         if user['username'] == username:
             return user['client_socket']
 
-
+# used to display all active online users to the client who requested. 
 def display_active_users(client):
     users_msg = f"\n** Users Online: ({len(users)}) **\n-------------------------------------------------------------------------------------\n{users}\n"
     users_msg += "-------------------------------------------------------------------------------------\n"
     send_single_client_msg(client, users_msg)
 
-
+# register a new user.
+# checks for unique username and if unique, adds the username/password to 'users.csv'
 def register_user(username, password):
     with open('users.csv', 'r', newline='', encoding='utf-8') as user_file:
         users_csv = csv.reader(user_file) 
@@ -74,10 +75,10 @@ def register_user(username, password):
     with open('users.csv', 'a', newline='', encoding='utf-8') as user_file:
         csv_writer = csv.writer(user_file)  
         csv_writer.writerow([username, password])
-        print(f"new user registered: '{username}'!")
+        print(f"New user registered: '{username}'!")
         return True
     
-
+# method to verify a login request with 'users.csv'. returns boolean success indication.
 def verify_login(username, password):
     with open('users.csv', 'r') as user_file:
         users_csv = csv.reader(user_file) 
@@ -87,7 +88,7 @@ def verify_login(username, password):
     return False; # no user and password match.
 
 
-
+# method to receive a new client and handle login/registration logic.
 def receive_new_client():
     while True:
         try:
@@ -129,7 +130,8 @@ def receive_new_client():
 
 
 
-# handle client interactions
+# handle all client interactions for a client in the chatroom. 
+# runs on a thread created by receive_new_client on successful login.
 def handle_client(client):
     while True:
         try:
@@ -154,7 +156,7 @@ def handle_client(client):
                 if not success:
                     send_single_client_msg(client, f"Sorry, user: '{parsed_msg[1]}' was not found. Type 'list' to view all online users.")
                     
-            else:
+            else: # only other option is broadcast msg, so we send it. 
                 broadcast(client, message)
 
         except: # exception or disconnect, remove the client and close connection.
@@ -171,6 +173,5 @@ def main():
     establish_connection()
     receive_new_client()
     
-
 if __name__ == "__main__":
     main()
