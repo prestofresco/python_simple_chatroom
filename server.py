@@ -161,7 +161,7 @@ def handle_client(client):
                 msg_portion = " ".join(f"{word}" for word in parsed_msg[2:])
                 priv_msg = f"(private) {get_username_by_client(client)}: {msg_portion}"
                 success = send_private_msg(parsed_msg[1], priv_msg)
-                if not success:
+                if not success: # user was not found
                     send_single_client_msg(client, f"Sorry, user: '{parsed_msg[1]}' was not found. Type 'list' to view all online users.")
                     
             else: # only other option is broadcast msg, so we send it. 
