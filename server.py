@@ -26,10 +26,11 @@ def remove_client(username):
     clients_online.remove(user_to_remove)
     users.remove(username)
 
-# broadcast a message to all online clients.
-def broadcast(message):
+# broadcast a message to all online clients, but not the client who sent the message.
+def broadcast(this_client, message):
     for client in clients_online:
-        send_single_client_msg(client['client_socket'], message)
+        if client['client_socket'] != this_client: # avoid sending to the client who sent this msg
+            send_single_client_msg(client['client_socket'], message)
 
 # send a single client a message
 def send_single_client_msg(client, message):
@@ -109,7 +110,7 @@ def receive_new_client():
                         print(f"New client online! Username: '{username}'!")
                         # start a thread to handle the client's chatroom interactions
                         threading.Thread(target=handle_client, args=(client,)).start()
-                        broadcast(f"* '{username}' joined the server! *")
+                        broadcast(client, f"* '{username}' joined the server! *")
                     else:
                         send_single_client_msg(client, "login_fail")
 
@@ -141,7 +142,7 @@ def handle_client(client):
                 username = get_username_by_client(client)
                 send_single_client_msg(client, "logout_success")
                 remove_client(username)
-                broadcast(f"* '{username}' left the chat! *")
+                broadcast(client, f"* '{username}' left the chat! *")
                 print(f"* '{username}' logged out! *")
                 break
 
@@ -154,13 +155,13 @@ def handle_client(client):
                     send_single_client_msg(client, f"Sorry, user: '{parsed_msg[1]}' was not found. Type 'list' to view all online users.")
                     
             else:
-                broadcast(message)
+                broadcast(client, message)
 
         except: # exception or disconnect, remove the client and close connection.
             username = get_username_by_client(client)
             remove_client(username)
             print(f"* '{username}' disconnected! *")
-            broadcast(f"* '{username}' disconnected! *")
+            broadcast(client, f"* '{username}' disconnected! *")
             break
 
 

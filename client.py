@@ -9,7 +9,8 @@ PORT = 7200
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 user = None
 help_menu = "\n--------------------------------- HELP MENU ----------------------------------------\n"
-help_menu += "Type a message to chat with other users.\n"
+help_menu += "* Use the following options: *\n"
+help_menu += "'msg' <your message> to send a chat to all online users.\n"
 help_menu += "'help' To display the help menu in chat.\n"
 help_menu += "'list' To display all online users in chat.\n"
 help_menu += "'logout' To logout and exit the chat room.\n"
@@ -20,9 +21,6 @@ login_help_menu = "\n--------------------------------- LOGIN HELP --------------
 login_help_menu += "Type 'registration' to register a new account.\n"
 login_help_menu += "Type 'login' to login to your account.\n"
 login_help_menu += "--------------------------------------------------------------------------------------\n"
-# declare the threads globally for access in methods
-write_thread = None
-receive_thread = None
 
 
 def establish_connection():
@@ -104,9 +102,12 @@ def write():
                     print("\n** Incorrect usage of 'privmsg'\nUsage: 'privmsg' <username> <message>'\n")
                 else: # correct number of args
                     send_server_msg(message)
+            elif parsed_msg[0].lower() == 'msg':
+                msg_portion = " ".join(f"{word}" for word in parsed_msg[1:]) # remove 'msg' from string and join the rest of the message on spaces
+                send_server_msg(f"{user}: {msg_portion}")
 
-            else: # just a chat message
-                send_server_msg(f"{user}: {message}")
+            else: # incorrect arguments
+                print("** Usage not recognized. Type 'msg' <your message> to message all users, or 'help' for the help menu.")
 
         except Exception as error:
             print("Sorry, an error occurred! :( please try again or type 'help' for the help menu.")
@@ -116,11 +117,8 @@ def write():
 def main():
     establish_connection()
     global write_thread, receive_thread
-    receive_thread = threading.Thread(target=receive)
-    write_thread = threading.Thread(target=write)
-    receive_thread.start() # start the receive thread
-    write_thread.start() # start the write thread
-
+    threading.Thread(target=receive).start() # start the receive thread
+    threading.Thread(target=write).start() # start the write thread
 
 if __name__ == "__main__":
     main()
