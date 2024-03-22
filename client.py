@@ -37,12 +37,14 @@ def establish_connection():
             password = input("Enter your password: ")
             send_server_msg(f"{username} {password}")
             response = client_socket.recv(4096).decode('utf-8')
-            if response == 'login_success':
+            if response == 'login_success': # successfull login
                 login_success = True
                 global user
                 user = username
                 print(f"** Login success! Welcome to the chatroom {user}!")
                 print(help_menu)
+            elif response == 'login_duplicate': # duplicate login
+                print("\n** This user is already logged in to the chatroom. Type 'login' to try again.")
             else: 
                 print("\n** Login fail. Username or password was incorrect. Type 'login' to try again.")
         

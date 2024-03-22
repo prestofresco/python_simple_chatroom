@@ -87,6 +87,12 @@ def verify_login(username, password):
                 return True # username and password matched
     return False; # no user and password match.
 
+# check that a client is not already online. returns true if they are not online, false if they are. 
+def verify_not_online(username):
+    for client in clients_online:
+        if client['username'].lower() == username.lower():
+            return False
+    return True
 
 # method to receive a new client and handle login/registration logic.
 def receive_new_client():
@@ -103,7 +109,9 @@ def receive_new_client():
                     response = client.recv(4096).decode('utf-8').split()
                     username = response[0]
                     password = response[1]
-                    if verify_login(username, password):
+                    if not verify_not_online(username): # check if the user is logged in already
+                        send_single_client_msg(client, 'login_duplicate') # duplicate login detected
+                    elif verify_login(username, password):
                         login_verified = True
                         send_single_client_msg(client, 'login_success')
                         users.append(username)
